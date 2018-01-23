@@ -5,12 +5,12 @@
 
 ![logo]
 
-Contacts gives you a unified API to query the device contacts which works across all platforms of Zebble application.
+Contacts gives you a unified API to query the device contacts.
 
 
 [![NuGet](https://img.shields.io/nuget/v/Zebble.Contacts.svg?label=NuGet)](https://www.nuget.org/packages/Zebble.Contacts/)
 
-> Modern smartphones have a central repository of contacts managed by the operating system. That is used for normal telephone functionality, but it's also available to apps via an API on each platform
+> Modern smartphones have a central repository of contacts managed by the operating system. That is used for normal telephone functionality, but it's also available to apps via an API on each platform.
 
 <br>
 
@@ -24,7 +24,7 @@ Contacts gives you a unified API to query the device contacts which works across
 
 ### Api Usage
 
-Use Device.Contacts from any project to gain access to APIs.
+Use Zebble.Device.Contacts from any project to gain access to APIs.
 
 ##### Get all device contacts:
 ```csharp

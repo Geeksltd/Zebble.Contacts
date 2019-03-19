@@ -16,6 +16,10 @@
         public string LastName { get; set; }
         public string DisplayName { get; set; }
         public string Nickname { get; set; }
+        public string PhotoUri { get; set; }
+        public string PhotoUriThumbnail { get; set; }
+        public byte[] PhotoData { get; set; }
+        public byte[] PhotoDataThumbnail { get; set; }
 
         public List<Phone> PhoneNumbers { get; internal set; } = new List<Phone>();
         public List<Organization> Organizations { get; internal set; } = new List<Organization>();

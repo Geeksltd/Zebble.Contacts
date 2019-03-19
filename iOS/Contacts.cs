@@ -1,10 +1,10 @@
 ﻿namespace Zebble.Device
 {
+    using AddressBook;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using AddressBook;
 
     partial class Contacts
     {
@@ -60,7 +60,10 @@
                 WebSites = data.GetUrls().Select(w => w.Value).ToList(),
 
                 InstantMessagingAccounts = imAccounts,
-                Addresses = addresses
+                Addresses = addresses,
+
+                PhotoData = data.GetImage(ABPersonImageFormat.OriginalSize).ToArray(),
+                PhotoDataThumbnail = data.GetImage(ABPersonImageFormat.Thumbnail).ToArray()
             };
         }
     }

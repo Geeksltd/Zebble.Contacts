@@ -5,9 +5,6 @@
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
-    using Android.Content;
-    using Android.Database;
-    using Android.Provider;
     using CommonColumns = Android.Provider.ContactsContract.CommonDataKinds.CommonColumns;
     using InstantMessaging = Android.Provider.ContactsContract.CommonDataKinds.Im;
     using OrganizationData = Android.Provider.ContactsContract.CommonDataKinds.Organization;
@@ -134,7 +131,9 @@
                             Id = id,
                             IsAggregate = true,
                             Tag = content,
-                            DisplayName = cursor.GetString(dnIndex)
+                            DisplayName = cursor.GetString(dnIndex),
+                            PhotoUri = GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoUri),
+                            PhotoUriThumbnail = GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoThumbnailUri)
                         };
                     }
 

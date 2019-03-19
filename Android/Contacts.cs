@@ -1,5 +1,8 @@
 ﻿namespace Zebble.Device
 {
+    using Android.Content;
+    using Android.Database;
+    using Android.Provider;
     using System;
     using System.Collections.Generic;
     using System.Linq;

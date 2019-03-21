@@ -54,6 +54,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContentUriConverter.cs" />
     <Compile Include="Contacts.cs" />
   </ItemGroup>
   <ItemGroup>

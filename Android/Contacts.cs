@@ -2,6 +2,7 @@
 {
     using Android.Content;
     using Android.Database;
+    using Android.OS;
     using Android.Provider;
     using System;
     using System.Collections.Generic;
@@ -135,8 +136,8 @@
                             IsAggregate = true,
                             Tag = content,
                             DisplayName = cursor.GetString(dnIndex),
-                            PhotoUri = GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoUri),
-                            PhotoUriThumbnail = GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoThumbnailUri)
+                            PhotoData = ContentUriConverter.GetFileData(GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoUri)),
+                            PhotoDataThumbnail = ContentUriConverter.GetFileData(GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoThumbnailUri))
                         };
                     }
 
@@ -280,7 +281,7 @@
             if (pobox != null)
             {
                 if (street != null)
-                    result.StreetAddress += Environment.NewLine;
+                    result.StreetAddress += System.Environment.NewLine;
 
                 result.StreetAddress += pobox;
             }

@@ -41,7 +41,7 @@
                 UserId = im.Value.Username
             }).ToList();
 
-            return new Contact
+            var contact = new Contact
             {
                 Id = data.Id.ToString(),
                 FirstName = data.FirstName,
@@ -60,11 +60,16 @@
                 WebSites = data.GetUrls().Select(w => w.Value).ToList(),
 
                 InstantMessagingAccounts = imAccounts,
-                Addresses = addresses,
-
-                PhotoData = data.GetImage(ABPersonImageFormat.OriginalSize).ToArray(),
-                PhotoDataThumbnail = data.GetImage(ABPersonImageFormat.Thumbnail).ToArray()
+                Addresses = addresses
             };
+
+            if (data.HasImage)
+            {
+                contact.PhotoData = data.GetImage(ABPersonImageFormat.OriginalSize).ToArray();
+                contact.PhotoDataThumbnail = data.GetImage(ABPersonImageFormat.Thumbnail).ToArray();
+            }
+
+            return contact;
         }
     }
 }

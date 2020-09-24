@@ -135,10 +135,20 @@
                             Id = id,
                             IsAggregate = true,
                             Tag = content,
-                            DisplayName = cursor.GetString(dnIndex),
-                            PhotoData = ContentUriConverter.GetFileData(GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoUri)),
-                            PhotoDataThumbnail = ContentUriConverter.GetFileData(GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoThumbnailUri))
+                            DisplayName = cursor.GetString(dnIndex)
                         };
+
+                        try
+                        {
+                            currentContact.PhotoData = ContentUriConverter.GetFileData(GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoUri));
+                            currentContact.PhotoDataThumbnail = ContentUriConverter.GetFileData(GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoThumbnailUri));
+                        }
+
+                        catch
+                        {
+                            currentContact.PhotoData = null;
+                            currentContact.PhotoDataThumbnail = null;
+                        }
                     }
 
                     FillContactWithRow(currentContact, cursor);

@@ -1,10 +1,10 @@
 ﻿namespace Zebble.Device
 {
     using AddressBook;
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using Olive;
 
     partial class Contacts
     {

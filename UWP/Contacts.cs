@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Threading.Tasks;
     using Windows.ApplicationModel.Contacts;
+    using Olive;
 
     partial class Contacts
     {

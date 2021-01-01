@@ -1,4 +1,4 @@
-﻿[logo]: https://raw.githubusercontent.com/Geeksltd/Zebble.Contacts/master/Shared/NuGet/Icon.png "Zebble.Contacts"
+﻿[logo]: https://raw.githubusercontent.com/Geeksltd/Zebble.Contacts/master/icon.png "Zebble.Contacts"
 
 
 ## Zebble.Contacts

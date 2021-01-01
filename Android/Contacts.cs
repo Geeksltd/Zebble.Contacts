@@ -2,9 +2,7 @@
 {
     using Android.Content;
     using Android.Database;
-    using Android.OS;
     using Android.Provider;
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
@@ -16,6 +14,7 @@
     using StructuredName = Android.Provider.ContactsContract.CommonDataKinds.StructuredName;
     using StructuredPostal = Android.Provider.ContactsContract.CommonDataKinds.StructuredPostal;
     using WebsiteData = Android.Provider.ContactsContract.CommonDataKinds.Website;
+    using Olive;
 
     partial class Contacts
     {
@@ -190,7 +189,7 @@
 
         static void FillContactExtras(ContentResolver content, string recordId, Contact contact)
         {
-            if (recordId.LacksValue()) return;
+            if (recordId.IsEmpty()) return;
 
             var column = ContactsContract.ContactsColumns.LookupKey;
 

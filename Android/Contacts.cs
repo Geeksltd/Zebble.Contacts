@@ -6,7 +6,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
-    using System.Threading.Tasks;
     using CommonColumns = Android.Provider.ContactsContract.CommonDataKinds.CommonColumns;
     using InstantMessaging = Android.Provider.ContactsContract.CommonDataKinds.Im;
     using OrganizationData = Android.Provider.ContactsContract.CommonDataKinds.Organization;
@@ -15,25 +14,22 @@
     using StructuredPostal = Android.Provider.ContactsContract.CommonDataKinds.StructuredPostal;
     using WebsiteData = Android.Provider.ContactsContract.CommonDataKinds.Website;
     using Olive;
+    using System.Threading.Tasks;
 
     partial class Contacts
     {
         static ContentResolver ContentResolver => UIRuntime.CurrentActivity.ContentResolver;
         const int BATCH_SIZE = 256;
 
-        static Task<List<Contact>> DoReadContacts(string searchText = "")
+        static Task<List<Contact>> DoReadContacts(ContactSearchParams searchParams)
         {
-            if (searchText.HasValue())
-            {
-                var ids = new string[1];
-                ids[0] = searchText;
-                return Task.FromResult(SelectContacts(ContentResolver, ids).ToList());
-            }
-            else
-                return Task.FromResult(SelectContacts(ContentResolver).ToList());
+            if (searchParams.NameKeywords.HasValue())
+                return Task.FromResult(SelectContacts(ContentResolver, new string[] { searchParams.NameKeywords }, searchParams).ToList());
+
+            return Task.FromResult(SelectContacts(ContentResolver, searchParams).ToList());
         }
 
-        static IEnumerable<Contact> SelectContacts(ContentResolver content)
+        static IEnumerable<Contact> SelectContacts(ContentResolver content, ContactSearchParams searchParams)
         {
             var uri = ContactsContract.Contacts.ContentUri;
 
@@ -42,7 +38,7 @@
             {
                 cursor = content.Query(uri, null, null, null, null);
                 if (cursor == null) yield break;
-                foreach (var contact in SelectContacts(cursor, content, BATCH_SIZE))
+                foreach (var contact in SelectContacts(cursor, content, BATCH_SIZE, searchParams))
                     yield return contact;
             }
             finally
@@ -51,7 +47,7 @@
             }
         }
 
-        static IEnumerable<Contact> SelectContacts(ICursor cursor, ContentResolver content, int batchSize)
+        static IEnumerable<Contact> SelectContacts(ICursor cursor, ContentResolver content, int batchSize, ContactSearchParams searchParams)
         {
             if (cursor == null) yield break;
 
@@ -68,7 +64,7 @@
                 if (counter == batchSize)
                 {
                     counter = 0;
-                    foreach (var c in SelectContacts(content, ids)) yield return c;
+                    foreach (var c in SelectContacts(content, ids, searchParams)) yield return c;
                 }
 
                 var id = cursor.GetString(columnIndex);
@@ -80,12 +76,12 @@
 
             if (counter > 0)
             {
-                foreach (var c in SelectContacts(content, ids.Take(counter).ToArray()))
+                foreach (var c in SelectContacts(content, ids.Take(counter).ToArray(), searchParams))
                     yield return c;
             }
         }
 
-        static IEnumerable<Contact> SelectContacts(ContentResolver content, string[] ids)
+        static IEnumerable<Contact> SelectContacts(ContentResolver content, string[] ids, ContactSearchParams searchParams)
         {
             ICursor cursor = null;
 
@@ -137,20 +133,18 @@
                             DisplayName = cursor.GetString(dnIndex)
                         };
 
-                        try
+                        if (searchParams.IncludeImage)
                         {
-                            currentContact.PhotoData = ContentUriConverter.GetFileData(GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoUri));
-                            currentContact.PhotoDataThumbnail = ContentUriConverter.GetFileData(GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoThumbnailUri));
-                        }
-
-                        catch
-                        {
-                            currentContact.PhotoData = null;
-                            currentContact.PhotoDataThumbnail = null;
+                            try
+                            {
+                                currentContact.PhotoData = ContentUriConverter.GetFileData(GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoUri));
+                                currentContact.PhotoDataThumbnail = ContentUriConverter.GetFileData(GetString(cursor, ContactsContract.Contacts.InterfaceConsts.PhotoThumbnailUri));
+                            }
+                            catch { }
                         }
                     }
 
-                    FillContactWithRow(currentContact, cursor);
+                    FillContactWithRow(currentContact, cursor, searchParams);
                 }
 
                 if (currentContact != null)
@@ -168,26 +162,7 @@
             }
         }
 
-        static Contact SelectContacts(ContentResolver content, ICursor cursor)
-        {
-            var column = ContactsContract.ContactsColumns.LookupKey;
-
-            var id = cursor.GetString(cursor.GetColumnIndex(column));
-
-            var contact = new Contact
-            {
-                Id = id,
-                IsAggregate = true,
-                Tag = content,
-                DisplayName = GetString(cursor, ContactsContract.ContactsColumns.DisplayName)
-            };
-
-            FillContactExtras(content, id, contact);
-
-            return contact;
-        }
-
-        static void FillContactExtras(ContentResolver content, string recordId, Contact contact)
+        static void FillContactExtras(ContentResolver content, string recordId, Contact contact, ContactSearchParams searchParams)
         {
             if (recordId.IsEmpty()) return;
 
@@ -198,7 +173,7 @@
             {
                 cursor = content.Query(ContactsContract.Data.ContentUri, null, column + " = ?", new[] { recordId }, null);
                 if (cursor == null) return;
-                while (cursor.MoveToNext()) FillContactWithRow(contact, cursor);
+                while (cursor.MoveToNext()) FillContactWithRow(contact, cursor, searchParams);
             }
             finally
             {
@@ -206,21 +181,24 @@
             }
         }
 
-        static void FillContactWithRow(Contact contact, ICursor cursor)
+        static void FillContactWithRow(Contact contact, ICursor cursor, ContactSearchParams searchParams)
         {
             var dataType = cursor.GetString(cursor.GetColumnIndex(ContactsContract.DataColumns.Mimetype));
             switch (dataType)
             {
                 case ContactsContract.CommonDataKinds.Nickname.ContentItemType:
-                    contact.Nickname = cursor.GetString(cursor.GetColumnIndex(ContactsContract.CommonDataKinds.Nickname.Name));
+                    if(searchParams.IncludeNickName)
+                        contact.Nickname = cursor.GetString(cursor.GetColumnIndex(ContactsContract.CommonDataKinds.Nickname.Name));
                     break;
 
                 case StructuredName.ContentItemType:
                     contact.FirstName = cursor.GetString(cursor.GetColumnIndex(StructuredName.GivenName));
                     contact.MiddleName = cursor.GetString(cursor.GetColumnIndex(StructuredName.MiddleName));
                     contact.LastName = cursor.GetString(cursor.GetColumnIndex(StructuredName.FamilyName));
-                    contact.Suffix = cursor.GetString(cursor.GetColumnIndex(StructuredName.Suffix));
-                    contact.Prefix = cursor.GetString(cursor.GetColumnIndex(StructuredName.Prefix));
+                    if(searchParams.IncludeSuffix)
+                        contact.Suffix = cursor.GetString(cursor.GetColumnIndex(StructuredName.Suffix));
+                    if (searchParams.IncludePrefix)
+                        contact.Prefix = cursor.GetString(cursor.GetColumnIndex(StructuredName.Prefix));
                     break;
 
                 case ContactsContract.CommonDataKinds.Phone.ContentItemType:
@@ -232,28 +210,35 @@
                     break;
 
                 case ContactsContract.CommonDataKinds.Note.ContentItemType:
-                    contact.Notes = GetNote(cursor);
+                    if(searchParams.IncludeNotes)
+                        contact.Notes = GetNote(cursor);
                     break;
 
                 case ContactsContract.CommonDataKinds.Organization.ContentItemType:
-                    contact.Organizations.Add(GetOrganization(cursor));
+                    if(searchParams.IncludeOrganizations)
+                        contact.Organizations.Add(GetOrganization(cursor));
                     break;
 
                 case StructuredPostal.ContentItemType:
-                    contact.Addresses.Add(GetAddress(cursor));
+                    if(searchParams.IncludeAddresses)
+                        contact.Addresses.Add(GetAddress(cursor));
                     break;
 
                 case InstantMessaging.ContentItemType:
-                    contact.InstantMessagingAccounts.Add(GetImAccount(cursor));
+                    if (searchParams.IncludeImAccounts)
+                        contact.InstantMessagingAccounts.Add(GetImAccount(cursor));
                     break;
 
                 case WebsiteData.ContentItemType:
-                    contact.WebSites.Add(GetWebsite(cursor));
+                    if (searchParams.IncludeWebsites)
+                        contact.Websites.Add(GetWebsite(cursor));
                     break;
 
                 case Relation.ContentItemType:
-                    contact.RelationShips.Add(GetRelationship(cursor));
+                    if (searchParams.IncludeRelationships)
+                        contact.Relationships.Add(GetRelationship(cursor));
                     break;
+
                 default:
                     break;
             }

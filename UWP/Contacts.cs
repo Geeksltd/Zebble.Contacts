@@ -9,69 +9,71 @@
 
     partial class Contacts
     {
-        static async Task<List<Contact>> DoReadContacts(string searchText)
+        static async Task<List<Contact>> DoReadContacts(ContactSearchParams searchParams)
         {
             var store = await ContactManager.RequestStoreAsync(ContactStoreAccessType.AllContactsReadOnly);
 
             IReadOnlyList<Windows.ApplicationModel.Contacts.Contact> contacts;
 
-            if (searchText.HasValue())
-                contacts = await store.FindContactsAsync(searchText);
+            if (searchParams.NameKeywords.HasValue())
+                contacts = await store.FindContactsAsync(searchParams.NameKeywords);
+
             else contacts = await store.FindContactsAsync();
 
-            return contacts.Select(Extract).ToList();
+            return contacts.Select(x => Extract(x, searchParams)).ToList();
         }
 
-        static Contact Extract(Windows.ApplicationModel.Contacts.Contact contact)
+        static Contact Extract(Windows.ApplicationModel.Contacts.Contact contact, ContactSearchParams searchParams)
         {
-            var org = contact.JobInfo.Select(og => new Contact.Organization
-            {
-                JobTitle = og.Title,
-                CompanyName = og.CompanyName
-            }).ToList();
-
             var phones = contact.Phones.Select(p => new Contact.Phone
             {
                 Number = p.Number,
                 Type = p.Kind.ToString()
             }).ToList();
 
-            var postalAddresses = contact.Addresses.Select(ad => new Contact.Address
+            var result = new Contact
             {
-                City = ad.Locality,
-                Country = ad.Country,
-                PostalCode = ad.PostalCode,
-                Region = ad.Region,
-                StreetAddress = ad.StreetAddress
-            });
-
-            var im = contact.ConnectedServiceAccounts.Select(ims => new Contact.InstantMessagingAccount
-            {
-                Service = ims.ServiceName,
-                UserId = ims.Id
-            });
-
-            return new Contact
-            {
-                DisplayName = contact.DisplayName,
-                FirstName = contact.FirstName,
-                Emails = contact.Emails.Select(e => e.Address).ToList(),
                 Id = contact.Id,
-                LastName = contact.LastName,
+                FirstName = contact.FirstName,
                 MiddleName = contact.MiddleName,
-                Nickname = contact.Nickname,
-                Notes = contact.Notes,
+                LastName = contact.LastName,
+                DisplayName = contact.DisplayName,
                 PhoneNumbers = phones,
+                Emails = contact.Emails.Select(e => e.Address).ToList(),
 
-                Prefix = contact.HonorificNamePrefix,
-                Suffix = contact.HonorificNameSuffix,
-                WebSites = contact.Websites.Select(w => w.Uri?.ToString()).ToList(),
-                Addresses = postalAddresses.ToList(),
-                InstantMessagingAccounts = im.ToList(),
-                Organizations = org,
-
-                RelationShips = contact.SignificantOthers.Select(r => r.Name).ToList()
+                Prefix = searchParams.IncludePrefix ? contact.HonorificNamePrefix : null,
+                Suffix = searchParams.IncludeSuffix ? contact.HonorificNameSuffix : null,
+                Nickname = searchParams.IncludeNickName ? contact.Nickname : null,
+                Notes = searchParams.IncludeNotes ? contact.Notes : null,
+                Relationships = searchParams.IncludeRelationships ? contact.SignificantOthers.Select(r => r.Name).ToList() : null,
+                Websites = searchParams.IncludeWebsites ? contact.Websites.Select(w => w.Uri?.ToString()).ToList() : null,
             };
+
+            if(searchParams.IncludeOrganizations)
+                result.Organizations = contact.JobInfo.Select(og => new Contact.Organization
+                {
+                    JobTitle = og.Title,
+                    CompanyName = og.CompanyName
+                }).ToList();
+
+            if (searchParams.IncludeImAccounts)
+                result.InstantMessagingAccounts = contact.ConnectedServiceAccounts.Select(ims => new Contact.InstantMessagingAccount
+                {
+                    Service = ims.ServiceName,
+                    UserId = ims.Id
+                }).ToList();
+
+            if(searchParams.IncludeAddresses)
+                result.Addresses = contact.Addresses.Select(ad => new Contact.Address
+                {
+                    City = ad.Locality,
+                    Country = ad.Country,
+                    PostalCode = ad.PostalCode,
+                    Region = ad.Region,
+                    StreetAddress = ad.StreetAddress
+                }).ToList();
+
+            return result;
         }
     }
 }

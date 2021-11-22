@@ -11,24 +11,25 @@
             /// <summary>
             /// Returns all the contacts in the device operating system.
             /// </summary>
-            public static Task<IEnumerable<Contact>> GetAll(OnError errorAction = OnError.Alert) => Search(null);
+            public static Task<IEnumerable<Contact>> GetAll(
+                OnError errorAction = OnError.Alert)
+                => Search(new ContactSearchParams(), errorAction);
 
             /// <summary>
             /// Returns the contacts in the device operating system which match the specified search query.        
             /// </summary>
-            /// <param name="nameKeywords">If null or empty, all contacts will be returned.</param>
-            public static async Task<IEnumerable<Contact>> Search(string nameKeywords, OnError errorAction = OnError.Alert)
+            public static async Task<IEnumerable<Contact>> Search(ContactSearchParams searchParams, OnError errorAction = OnError.Alert)
             {
                 try
                 {
-                    if (await Device.Permissions.Check(Device.Permission.Contacts) != PermissionResult.Granted)
-                        if (await Device.Permissions.Request(Device.Permission.Contacts) != PermissionResult.Granted)
+                    if (await Permissions.Check(Permission.Contacts) != PermissionResult.Granted)
+                        if (await Permissions.Request(Permission.Contacts) != PermissionResult.Granted)
                         {
                             await errorAction.Apply("Permission for reading device contacts not granted");
                             return null;
                         }
 
-                    return await DoReadContacts(nameKeywords);
+                    return await DoReadContacts(searchParams);
                 }
                 catch (Exception ex)
                 {
@@ -37,5 +38,20 @@
                 }
             }
         }
+    }
+
+    public class ContactSearchParams
+    {
+        public string NameKeywords;
+        public bool IncludePrefix;
+        public bool IncludeSuffix;
+        public bool IncludeNickName;
+        public bool IncludeNotes;
+        public bool IncludeOrganizations;
+        public bool IncludeRelationships;
+        public bool IncludeWebsites;
+        public bool IncludeImAccounts;
+        public bool IncludeAddresses;
+        public bool IncludeImage;
     }
 }

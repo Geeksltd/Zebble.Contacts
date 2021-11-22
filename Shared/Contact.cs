@@ -22,8 +22,8 @@
         public List<Phone> PhoneNumbers { get; internal set; } = new List<Phone>();
         public List<Organization> Organizations { get; internal set; } = new List<Organization>();
         public List<string> Emails { get; internal set; } = new List<string>();
-        public List<string> WebSites { get; internal set; } = new List<string>();
-        public List<string> RelationShips { get; internal set; } = new List<string>();
+        public List<string> Websites { get; internal set; } = new List<string>();
+        public List<string> Relationships { get; internal set; } = new List<string>();
         public List<Address> Addresses { get; internal set; } = new List<Address>();
         public List<InstantMessagingAccount> InstantMessagingAccounts { get; internal set; } = new List<InstantMessagingAccount>();
         public object Tag { get; internal set; }
